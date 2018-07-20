@@ -3,6 +3,7 @@ package com.smartcar.sdk;
 import com.smartcar.sdk.data.*;
 import okhttp3.RequestBody;
 import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
@@ -20,6 +21,7 @@ import static org.mockito.Matchers.refEq;
  */
 //@RunWith(PowerMockRunner.class)
 @PrepareForTest(Vehicle.class)
+@PowerMockIgnore({"org.apache.logging.log4j.*"})
 public class VehicleTest {
 
   private final String vehicleId = UUID.randomUUID().toString();

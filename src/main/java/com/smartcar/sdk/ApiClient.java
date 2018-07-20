@@ -2,6 +2,8 @@ package com.smartcar.sdk;
 
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.GsonBuilder;
+import com.moczul.ok2curl.CurlInterceptor;
+import com.moczul.ok2curl.logger.Loggable;
 import com.smartcar.sdk.data.ApiData;
 import com.smartcar.sdk.data.SmartcarResponse;
 import okhttp3.MediaType;
@@ -9,6 +11,8 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 import org.joda.time.DateTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
@@ -16,8 +20,9 @@ import java.io.IOException;
  * Provides the core functionality for API client objects.
  */
 abstract class ApiClient {
+  final static Logger logger = LoggerFactory.getLogger(ApiClient.class);
   public static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
-  private static final String SDK_VERSION = ApiClient.class.getPackage().getImplementationVersion();
+  private static final String SDK_VERSION = ApiClient.getSdkVersion();
   private static final String API_VERSION = "v1.0";
   protected static final String URL_API = "https://api.smartcar.com/" + ApiClient.API_VERSION;
   protected static final String USER_AGENT = String.format(
@@ -29,10 +34,35 @@ abstract class ApiClient {
       System.getProperty("java.vm.name")
   );
 
-  private static OkHttpClient client = new OkHttpClient();
+//  private static OkHttpClient client = new OkHttpClient();
+  private static OkHttpClient client = new OkHttpClient.Builder()
+          .addInterceptor(new CurlInterceptor(new Loggable() {
+            @Override
+            public void log(String message) {
+              logger.debug(message);
+            }
+          }))
+          .build();
+
   static GsonBuilder gson = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES);
 
   public static String urlApi = ApiClient.URL_API;
+
+  /**
+   * Retrieves the SDK version, falling back to DEVELOPMENT if we're not running
+   * from a jar.
+   *
+   * @return the SDK version
+   */
+  private static String getSdkVersion() {
+    String version = ApiClient.class.getPackage().getImplementationVersion();
+
+    if(version == null) {
+      version = "DEVELOPMENT";
+    }
+
+    return version;
+  }
 
   /**
    * Sends the specified request, returning the raw response body.
